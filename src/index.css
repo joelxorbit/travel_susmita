@@ -1,0 +1,46 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html, body, #root, div[class*="min-h-screen"], .dark {
+    background-color: #ffffff !important;
+    color: #0f172a !important;
+  }
+}
+
+@layer components {
+  .gradient-btn {
+    @apply bg-gradient-to-r from-[#DB2777] via-[#E11D48] to-[#BE185D] text-white py-3 px-6 rounded-2xl font-extrabold shadow-lg shadow-pink-500/25 hover:shadow-pink-500/40 hover:scale-[1.02] active:scale-95 transition-all duration-200 cursor-pointer text-center inline-flex items-center justify-center;
+  }
+  .gradient-btn-outline {
+    @apply border-2 border-[#DB2777] text-[#DB2777] py-3 px-6 rounded-2xl font-extrabold hover:bg-[#DB2777] hover:text-white transition-all duration-200 cursor-pointer text-center inline-flex items-center justify-center;
+  }
+  .glass-card, .glass {
+    background-color: #ffffff !important;
+    color: #0f172a !important;
+    border-color: #fce7f3 !important; /* pink-100 */
+    box-shadow: 0 20px 25px -5px rgba(219, 39, 119, 0.08), 0 8px 10px -6px rgba(219, 39, 119, 0.04) !important;
+  }
+  /* Force dark boxes and category buttons in cards/pages to be clean white and readable */
+  [class*="dark:bg-slate-"], [class*="dark:bg-gray-"], [class*="bg-slate-900/60"] {
+    background-color: #ffffff !important;
+    color: #0f172a !important;
+    border-color: #e2e8f0 !important;
+  }
+  /* Prevent unreadable white text on white backgrounds */
+  [class*="dark:text-white"], [class*="dark:text-slate-100"], [class*="dark:text-slate-200"] {
+    color: #0f172a !important;
+  }
+}
+
+@layer utilities {
+  /* Hide scrollbars for clean tab/carousel scrolling */
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
