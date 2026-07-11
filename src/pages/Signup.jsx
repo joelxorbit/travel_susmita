@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { Compass, User, Mail, Lock, Phone, ArrowRight, Globe, Share2 } from 'lucide-react';
+import { Compass, User, Mail, Lock, Phone, ArrowRight } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export default function Signup() {
@@ -12,7 +12,7 @@ export default function Signup() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const { signup, loginWithGoogle, loginWithGithub } = useAuth();
+  const { signup } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -42,25 +42,6 @@ export default function Signup() {
     }
   };
 
-  const handleGoogleSignup = async () => {
-    try {
-      await loginWithGoogle();
-      toast.success('Signed up with Google!');
-      navigate('/');
-    } catch (err) {
-      toast.error('Google registration failed');
-    }
-  };
-
-  const handleGithubSignup = async () => {
-    try {
-      await loginWithGithub();
-      toast.success('Signed up with GitHub!');
-      navigate('/');
-    } catch (err) {
-      toast.error('GitHub registration failed');
-    }
-  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 text-white flex items-center justify-center p-4 sm:p-6 relative overflow-hidden py-12">
@@ -173,33 +154,7 @@ export default function Signup() {
           </button>
         </form>
 
-        <div className="relative my-6">
-          <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-slate-800"></div>
-          </div>
-          <div className="relative flex justify-center text-xs uppercase font-bold">
-            <span className="bg-slate-900 px-3 text-slate-500">Or sign up with</span>
-          </div>
-        </div>
 
-        <div className="grid grid-cols-2 gap-3">
-          <button
-            type="button"
-            onClick={handleGoogleSignup}
-            className="py-2.5 px-4 rounded-xl bg-slate-800/80 hover:bg-slate-800 text-slate-200 text-xs font-bold flex items-center justify-center gap-2 border border-slate-700/60 transition-all"
-          >
-            <Globe className="w-4 h-4 text-rose-400" />
-            <span>Google</span>
-          </button>
-          <button
-            type="button"
-            onClick={handleGithubSignup}
-            className="py-2.5 px-4 rounded-xl bg-slate-800/80 hover:bg-slate-800 text-slate-200 text-xs font-bold flex items-center justify-center gap-2 border border-slate-700/60 transition-all"
-          >
-            <Share2 className="w-4 h-4 text-white" />
-            <span>GitHub</span>
-          </button>
-        </div>
 
         <p className="mt-8 text-center text-xs text-slate-400">
           Already a VIP member?{' '}

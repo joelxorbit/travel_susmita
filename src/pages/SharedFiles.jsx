@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { db } from '../firebase/firebase';
-import { collection, query, where, getDocs, doc, updateDoc } from 'firebase/firestore';
-import { Share2, Copy, CheckCircle, ExternalLink, Globe, File, Image as ImageIcon, Video, Music } from 'lucide-react';
+import { Share2, Copy, CheckCircle, ExternalLink, File, Image as ImageIcon, Video, Music } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { motion } from 'framer-motion';
 
@@ -12,9 +10,7 @@ export default function SharedFiles() {
   const [loading, setLoading] = useState(true);
   const [copiedId, setCopiedId] = useState(null);
 
-  const HOSTING_BASE_URL = import.meta.env.VITE_API_URL 
-    ? import.meta.env.VITE_API_URL.replace('/api', '') 
-    : (window.location.hostname === 'localhost' ? 'http://localhost:5000' : window.location.origin);
+  const HOSTING_BASE_URL = window.location.origin;
 
   useEffect(() => {
     fetchSharedFiles();
@@ -22,20 +18,10 @@ export default function SharedFiles() {
 
   const fetchSharedFiles = async () => {
     try {
-      const q = query(
-        collection(db, 'Files'), 
-        where('owner', '==', currentUser.uid),
-        where('isPublic', '==', true)
-      );
-      const querySnapshot = await getDocs(q);
-      
-      const filesList = querySnapshot.docs
-        .map(doc => ({ id: doc.id, ...doc.data() }))
-        .sort((a, b) => new Date(b.uploadDate) - new Date(a.uploadDate));
-        
+      const stored = JSON.parse(localStorage.getItem('wanderluxe_files') || '[]');
+      const filesList = stored.filter(f => f.isPublic);
       setSharedFiles(filesList);
     } catch (error) {
-      console.error("Error fetching shared files: ", error);
       toast.error('Failed to load shared files');
     } finally {
       setLoading(false);
@@ -50,19 +36,14 @@ export default function SharedFiles() {
   };
 
   const unshareFile = async (fileId) => {
-    try {
-      await updateDoc(doc(db, 'Files', fileId), {
-        isPublic: false
-      });
-      setSharedFiles(prev => prev.filter(f => f.id !== fileId));
-      toast.success('File is now private');
-    } catch (error) {
-      console.error('Error unsharing file:', error);
-      toast.error('Failed to update file permissions');
-    }
+    const stored = JSON.parse(localStorage.getItem('wanderluxe_files') || '[]');
+    const updated = stored.map(f => f.id === fileId ? { ...f, isPublic: false } : f);
+    localStorage.setItem('wanderluxe_files', JSON.stringify(updated));
+    setSharedFiles(prev => prev.filter(f => f.id !== fileId));
+    toast.success('File is now private');
   };
 
-  const getFileIcon = (fileType) => {
+  const getFileIcon = (fileType = '') => {
     if (fileType.startsWith('image/')) return <ImageIcon className="w-8 h-8 text-blue-500" />;
     if (fileType.startsWith('video/')) return <Video className="w-8 h-8 text-purple-500" />;
     if (fileType.startsWith('audio/')) return <Music className="w-8 h-8 text-emerald-500" />;
@@ -93,7 +74,7 @@ export default function SharedFiles() {
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {sharedFiles.map((file, index) => {
-            const publicUrl = `${HOSTING_BASE_URL}/api/share/${file.id}`;
+            const publicUrl = `${HOSTING_BASE_URL}/share/${file.id}`;
             return (
               <motion.div 
                 key={file.id} 
@@ -111,7 +92,7 @@ export default function SharedFiles() {
                       {file.fileName}
                     </h3>
                     <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                      {(file.fileSize / (1024 * 1024)).toFixed(2)} MB • {file.downloadCount || 0} Downloads
+                      {((file.fileSize || 0) / (1024 * 1024)).toFixed(2)} MB
                     </p>
                   </div>
                   <button

@@ -1,8 +1,5 @@
 import React, { useState, useCallback } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { db, rtdb } from '../firebase/firebase';
-import { ref as rtdbRef, set } from 'firebase/database';
-import { collection, addDoc, doc, updateDoc, increment } from 'firebase/firestore';
 import { useDropzone } from 'react-dropzone';
 import { UploadCloud, X, File, CheckCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -25,7 +22,7 @@ export default function Upload() {
         file,
         id: Math.random().toString(36).substring(7),
         progress: 0,
-        status: 'pending', // pending, uploading, success, error
+        status: 'pending',
       };
     }).filter(Boolean);
     
@@ -50,56 +47,33 @@ export default function Upload() {
   const handleUpload = async () => {
     if (files.length === 0) return;
 
-    // Check storage limits
-    const totalSize = files.reduce((acc, f) => acc + f.file.size, 0);
-    if ((currentUser.storageUsed + totalSize) > currentUser.storageLimit) {
-      toast.error('You have reached your free storage limit. Upgrade to Premium!');
-      return;
-    }
-
     setUploading(true);
 
     for (let i = 0; i < files.length; i++) {
       const fileObj = files[i];
       if (fileObj.status === 'success') continue;
 
-      setFiles(prev => prev.map(f => f.id === fileObj.id ? { ...f, status: 'uploading', progress: 30 } : f));
+      setFiles(prev => prev.map(f => f.id === fileObj.id ? { ...f, status: 'uploading', progress: 50 } : f));
 
       try {
-        // 1. Convert to Base64
         const base64Data = await fileToBase64(fileObj.file);
-        setFiles(prev => prev.map(f => f.id === fileObj.id ? { ...f, progress: 60 } : f));
 
-        // 2. Save Metadata to Firestore
-        const docRef = await addDoc(collection(db, 'Files'), {
+        // Save local metadata
+        const existing = JSON.parse(localStorage.getItem('wanderluxe_files') || '[]');
+        existing.push({
+          id: `file-${Date.now()}`,
           fileName: fileObj.file.name,
           fileType: fileObj.file.type,
           fileSize: fileObj.file.size,
           uploadDate: new Date().toISOString(),
-          downloadCount: 0,
-          owner: currentUser.uid,
-          isPublic: false
+          data: base64Data
         });
-
-        // 3. Save Base64 to Realtime Database
-        await set(rtdbRef(rtdb, `fileBlobs/${docRef.id}`), {
-          data: base64Data,
-          owner: currentUser.uid
-        });
-
-        setFiles(prev => prev.map(f => f.id === fileObj.id ? { ...f, progress: 90 } : f));
-
-        // 4. Update User Storage
-        const userRef = doc(db, 'Users', currentUser.uid);
-        await updateDoc(userRef, {
-          storageUsed: increment(fileObj.file.size)
-        });
+        localStorage.setItem('wanderluxe_files', JSON.stringify(existing));
 
         setFiles(prev => prev.map(f => f.id === fileObj.id ? { ...f, status: 'success', progress: 100 } : f));
         toast.success(`${fileObj.file.name} uploaded!`);
 
       } catch (err) {
-        console.error('Upload failed:', err);
         setFiles(prev => prev.map(f => f.id === fileObj.id ? { ...f, status: 'error' } : f));
         toast.error(`Failed to upload ${fileObj.file.name}`);
       }

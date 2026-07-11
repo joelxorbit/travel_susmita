@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { Compass, Mail, Lock, ShieldAlert, ArrowRight, Globe, Share2, CheckCircle } from 'lucide-react';
+import { Compass, Mail, Lock, ShieldAlert, ArrowRight, CheckCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export default function Login() {
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const { login, loginWithGoogle, loginWithGithub } = useAuth();
+  const { login } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -51,25 +51,6 @@ export default function Login() {
     }
   };
 
-  const handleGoogleLogin = async () => {
-    try {
-      await loginWithGoogle();
-      toast.success('Signed in with Google!');
-      navigate(from);
-    } catch (err) {
-      toast.error('Google sign in failed');
-    }
-  };
-
-  const handleGithubLogin = async () => {
-    try {
-      await loginWithGithub();
-      toast.success('Signed in with GitHub!');
-      navigate(from);
-    } catch (err) {
-      toast.error('GitHub sign in failed');
-    }
-  };
 
   const fillAdmin = () => {
     setIdentifier('admin@gmail.com');
@@ -187,35 +168,7 @@ export default function Login() {
           </button>
         </div>
 
-        {/* Divider */}
-        <div className="relative my-6">
-          <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-slate-800"></div>
-          </div>
-          <div className="relative flex justify-center text-xs uppercase font-bold">
-            <span className="bg-slate-900 px-3 text-slate-500">Or continue with</span>
-          </div>
-        </div>
 
-        {/* Social Login */}
-        <div className="grid grid-cols-2 gap-3">
-          <button
-            type="button"
-            onClick={handleGoogleLogin}
-            className="py-2.5 px-4 rounded-xl bg-slate-800/80 hover:bg-slate-800 text-slate-200 text-xs font-bold flex items-center justify-center gap-2 border border-slate-700/60 transition-all"
-          >
-            <Globe className="w-4 h-4 text-rose-400" />
-            <span>Google</span>
-          </button>
-          <button
-            type="button"
-            onClick={handleGithubLogin}
-            className="py-2.5 px-4 rounded-xl bg-slate-800/80 hover:bg-slate-800 text-slate-200 text-xs font-bold flex items-center justify-center gap-2 border border-slate-700/60 transition-all"
-          >
-            <Share2 className="w-4 h-4 text-white" />
-            <span>GitHub</span>
-          </button>
-        </div>
 
         {/* Footer Link */}
         <p className="mt-8 text-center text-xs text-slate-400">

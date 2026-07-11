@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { db } from '../firebase/firebase';
-import { collection, query, where, getDocs } from 'firebase/firestore';
 import { Globe, ExternalLink, Copy, CheckCircle, Code } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { motion } from 'framer-motion';
@@ -12,9 +10,7 @@ export default function HTMLHosting() {
   const [loading, setLoading] = useState(true);
   const [copiedId, setCopiedId] = useState(null);
 
-  const HOSTING_BASE_URL = import.meta.env.VITE_API_URL 
-    ? import.meta.env.VITE_API_URL.replace('/api', '') 
-    : (window.location.hostname === 'localhost' ? 'http://localhost:5000' : window.location.origin);
+  const HOSTING_BASE_URL = window.location.origin;
 
   useEffect(() => {
     fetchHtmlFiles();
@@ -22,22 +18,17 @@ export default function HTMLHosting() {
 
   const fetchHtmlFiles = async () => {
     try {
-      const q = query(collection(db, 'Files'), where('owner', '==', currentUser.uid));
-      const querySnapshot = await getDocs(q);
-      
-      const filesList = querySnapshot.docs
-        .map(doc => ({ id: doc.id, ...doc.data() }))
+      const stored = JSON.parse(localStorage.getItem('wanderluxe_files') || '[]');
+      const filesList = stored
         .filter(file => {
-          const type = file.fileType;
-          const name = file.fileName;
-          return type === 'text/html' || type === 'text/css' || type?.includes('javascript') ||
+          const type = file.fileType || '';
+          const name = file.fileName || '';
+          return type === 'text/html' || type === 'text/css' || type.includes('javascript') ||
                  name.endsWith('.html') || name.endsWith('.css') || name.endsWith('.js');
-        })
-        .sort((a, b) => new Date(b.uploadDate) - new Date(a.uploadDate));
+        });
         
       setHtmlFiles(filesList);
     } catch (error) {
-      console.error("Error fetching HTML files: ", error);
       toast.error('Failed to load hosted sites');
     } finally {
       setLoading(false);
@@ -75,7 +66,7 @@ export default function HTMLHosting() {
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {htmlFiles.map((file, index) => {
-            const liveUrl = `${HOSTING_BASE_URL}/api/host/${file.id}`;
+            const liveUrl = `${HOSTING_BASE_URL}/host/${file.id}`;
             return (
               <motion.div 
                 key={file.id} 
@@ -84,7 +75,6 @@ export default function HTMLHosting() {
                 transition={{ delay: index * 0.1 }}
                 className="glass rounded-xl p-6 flex flex-col group relative overflow-hidden"
               >
-                {/* Status Indicator */}
                 <div className="absolute top-0 right-0 bg-emerald-500 text-white text-xs font-bold px-3 py-1 rounded-bl-lg">
                   LIVE
                 </div>
@@ -98,7 +88,7 @@ export default function HTMLHosting() {
                       {file.fileName}
                     </h3>
                     <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                      Uploaded on {new Date(file.uploadDate).toLocaleDateString()}
+                      Uploaded on {new Date(file.uploadDate || Date.now()).toLocaleDateString()}
                     </p>
                   </div>
                 </div>
